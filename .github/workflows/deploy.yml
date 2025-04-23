@@ -7,6 +7,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}
 
     env:
       IMAGE_NAME: hyndav/shell-app
@@ -38,7 +41,7 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t $IMAGE_NAME:$TAG -f shell-app-helm/Dockerfile shell-app-helm
+          docker build -t $IMAGE_NAME:$TAG -f shell-app/Dockerfile shell-app
           docker push $IMAGE_NAME:$TAG
 
       - name: Configure AWS Credentials
@@ -61,4 +64,6 @@ jobs:
 
       - name: Helm Upgrade
         run: |
-          helm upgrade --install shell-app ../../helm-deployment/shell-app-helm --set image.tag=$TAG --set dummy=$(date +%s)
+           helm upgrade --install shell-app shell-app-helm \
+            --set image.tag=$TAG \
+            --set dummy=$(date +%s)
