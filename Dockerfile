@@ -3,7 +3,7 @@ FROM node:lts-slim AS builder
 WORKDIR /app
 COPY . .
 RUN npm install --legacy-peer-deps
-RUN npm run build  # Ensure this outputs to /app/dist
+RUN npm run build  # This will output to /app/build
 
 # Stage 2: Runtime image (used by app AND Helm hook)
 FROM amazon/aws-cli:2.13.28 AS deploy
