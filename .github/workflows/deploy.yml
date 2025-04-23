@@ -14,8 +14,8 @@ jobs:
     env:
       IMAGE_NAME: hyndav/shell-app
       TAG: latest
-      NAMESPACE: shell-app-prod  # Update with your namespace
-      CLUSTER_NAME: your-eks-cluster-name  # Update with your cluster name
+      NAMESPACE: default
+      CLUSTER_NAME: hyndavi-eks-cluster5
 
     steps:
     - name: Checkout shell-app
