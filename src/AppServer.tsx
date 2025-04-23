@@ -6,12 +6,8 @@ const AppServer = ({ location }: { location: string }) => {
   return (
     <StaticRouter location={location}>
       <div>
-        <h2>Shell App (Server)</h2>
-        <nav>
-          <a href="/">Home</a> | <a href="/exercises">Frontend Exercises</a>
-        </nav>
         <Routes>
-        <Route path="/" element={<h3>Welcome to Shell App</h3>} />
+        <Route path="/" element={<h3>Welcome to Shell App Repo</h3>} />
         <Route path="/exercises" element={<div />} />
         </Routes>
       </div>

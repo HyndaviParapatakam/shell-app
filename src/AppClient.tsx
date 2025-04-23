@@ -20,10 +20,11 @@ const AppClient = () => {
 
   return (
     <BrowserRouter>
-      <div>
-        <h2>Shell App (Client)</h2>
-        <nav>
-          <a href="/">Home</a> | <a href="/exercises">Frontend Exercises</a>
+      <div className="shell-container">
+        <h2 className="shell-header">Shell App</h2>
+        <nav className="shell-nav">
+          <a style={{display: 'block'}}href="/" className="shell-link">Home</a>
+          <a style={{display: 'block'}} href="/exercises" className="shell-link">Frontend Exercises</a>
         </nav>
         <Suspense fallback={<div>Loading...</div>}>
           <AppRoutes />
