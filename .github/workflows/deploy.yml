@@ -83,6 +83,14 @@ jobs:
           --from-literal=distributionId=${{ secrets.CLOUDFRONT_DIST_ID }} \
           --namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
 
+    - name: Verify Helm Chart
+      run: |
+        helm template shell-app shell-app-helm \
+          --namespace $NAMESPACE \
+          --set image.repository=$IMAGE_NAME \
+          --set image.tag=$TAG \
+          --debug
+          
     - name: Helm Upgrade
       run: |
         helm upgrade --install shell-app shell-app-helm \
