@@ -38,7 +38,7 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t $IMAGE_NAME:$TAG .
+          docker build -t $IMAGE_NAME:$TAG -f shell-app-helm/Dockerfile shell-app-helm
           docker push $IMAGE_NAME:$TAG
 
       - name: Configure AWS Credentials
