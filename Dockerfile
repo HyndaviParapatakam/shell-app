@@ -1,5 +1,5 @@
 # Stage 1: Build the SSR app
-FROM node:lts-slim AS builder
+FROM node:18-slim AS builder
 WORKDIR /app
 COPY . .
 RUN npm install --legacy-peer-deps
