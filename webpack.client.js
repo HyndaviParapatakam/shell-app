@@ -35,8 +35,8 @@ module.exports = {
     new ModuleFederationPlugin({
       name: "shell_app",
       remotes: {
-        frontendExercises: 'frontendExercises@http://a304c7e9f7cbd4589800ba4bf3e72806-1962408363.ap-southeast-1.elb.amazonaws.com/remoteEntry.js',
-      }
+        frontend_exercises: "frontend_exercises@http://localhost:3001/remoteEntry.js",
+      },
       shared: {
         react: { singleton: true, eager: true, requiredVersion: "^19.1.0" },
         "react-dom": { singleton: true, eager: true, requiredVersion: "^19.1.0" },
