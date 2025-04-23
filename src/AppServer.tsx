@@ -1,7 +1,6 @@
 import React from "react";
 import { StaticRouter } from "react-router-dom/server";
 import { Routes, Route } from "react-router-dom";
-//import { routes } from "./routes.client"; // Import the same routes as client
 
 const AppServer = ({ location }: { location: string }) => {
   return (
