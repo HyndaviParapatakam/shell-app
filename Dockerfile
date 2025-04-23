@@ -3,7 +3,7 @@ FROM node:lts-slim AS builder
 WORKDIR /app
 COPY . .
 RUN npm install --legacy-peer-deps || (echo "❌ npm install failed" && cat /app/npm-debug.log || true && false)
-RUN npm run build || (echo "❌ Build failed" && ls -al && cat /app/build.log && false)
+RUN npm run build || (echo "❌ Build failed"; ls -al; [ -f build.log ] && cat build.log || echo "No build.log found"; false)
 
 # Stage 2: Runtime image (used by app AND Helm hook)
 FROM amazon/aws-cli:2.13.28 AS deploy
