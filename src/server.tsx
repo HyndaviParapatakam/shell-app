@@ -8,12 +8,12 @@ const PORT = 4000;
 
 app.use(express.static("dist"));
 app.get('/favicon.ico', (req, res) => {
-  res.status(204).end(); // no content
+  res.status(204).end();
 });
 
 app.get("/{*any}", (req, res) => {
   const html = ReactDOMServer.renderToString(<AppServer location={req.url} />);
-  console.log("🚀 SSR Output:\n", html);
+  console.log("SSR Output:\n", html);
   res.send(`
     <!DOCTYPE html>
     <html>
@@ -28,5 +28,5 @@ app.get("/{*any}", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log("✅ SSR server running on http://localhost:4000");
+  console.log("SSR server running on http://localhost:4000");
 });
