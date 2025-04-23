@@ -2,7 +2,7 @@ name: Deploy Shell App to Kubernetes
 
 on:
   push:
-    branches: [main]  # change if your deploy branch is different
+    branches: [main]
 
 jobs:
   deploy:
@@ -14,56 +14,84 @@ jobs:
     env:
       IMAGE_NAME: hyndav/shell-app
       TAG: latest
+      NAMESPACE: shell-app-prod  # Update with your namespace
+      CLUSTER_NAME: your-eks-cluster-name  # Update with your cluster name
 
     steps:
+    - name: Checkout shell-app
+      uses: actions/checkout@v3
+      with:
+        path: shell-app
 
-      - name: Checkout shell-app
-        uses: actions/checkout@v3
-        with:
-          path: shell-app
+    - name: Checkout helm-deployment
+      uses: actions/checkout@v3
+      with:
+        repository: HyndaviParapatakam/shell-app-helm
+        token: ${{ secrets.GITHUB_TOKEN }}
+        path: shell-app-helm
 
-      - name: Checkout helm-deployment
-        uses: actions/checkout@v3
-        with:
-          repository: HyndaviParapatakam/shell-app-helm
-          token: ${{ secrets.GITHUB_TOKEN }}
-          path: shell-app-helm
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+    - name: Build and Push Docker Image
+      run: |
+        docker build -t $IMAGE_NAME:$TAG -f shell-app/Dockerfile shell-app
+        docker push $IMAGE_NAME:$TAG
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Build and Push Docker Image
-        run: |
-          docker build -t $IMAGE_NAME:$TAG -f shell-app/Dockerfile shell-app
-          docker push $IMAGE_NAME:$TAG
+    - name: Install Kubernetes Tools
+      run: |
+        # Install kubectl
+        curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/
+        
+        # Install Helm
+        curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        chmod 700 get_helm.sh
+        ./get_helm.sh
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+    - name: Configure EKS Access
+      run: |
+        aws eks update-kubeconfig \
+          --name $CLUSTER_NAME \
+          --region ${{ secrets.AWS_REGION }}
 
+    - name: Create AWS Credentials Secret
+      run: |
+        kubectl create secret generic aws-credentials \
+          --from-literal=accessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }} \
+          --from-literal=secretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+          --namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Set up Kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'latest'
+    - name: Create S3 ConfigMap
+      run: |
+        kubectl create configmap s3-config \
+          --from-literal=bucket=${{ secrets.S3_BUCKET }} \
+          --from-literal=distributionId=${{ secrets.CLOUDFRONT_DIST_ID }} \
+          --namespace $NAMESPACE --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Set Kubeconfig
-        run: |
-          echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > kubeconfig
-          echo "KUBECONFIG=$PWD/kubeconfig" >> $GITHUB_ENV
-
-      - name: Helm Upgrade
-        run: |
-           helm upgrade --install shell-app shell-app-helm \
-            --set image.tag=$TAG \
-            --set dummy=$(date +%s)
+    - name: Helm Upgrade
+      run: |
+        helm upgrade --install shell-app shell-app-helm \
+          --namespace $NAMESPACE \
+          --set image.repository=$IMAGE_NAME \
+          --set image.tag=$TAG \
+          --set aws.secretName=aws-credentials \
+          --set aws.configMapName=s3-config \
+          --timeout 15m \
+          --wait \
+          --atomic \
+          --debug
