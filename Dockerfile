@@ -1,9 +1,9 @@
 # Stage 1: Build the SSR app
-FROM node:18-slim AS builder
+FROM node:lts-slim AS builder
 WORKDIR /app
 COPY . .
 RUN npm install --legacy-peer-deps
-RUN npm run build  # This will output to /app/dist
+RUN npm run build  # Ensure this outputs to /app/dist
 
 # Stage 2: Runtime image (used by app AND Helm hook)
 FROM amazon/aws-cli:2.13.28 AS deploy
